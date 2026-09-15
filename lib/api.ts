@@ -1,8 +1,7 @@
 import { Job } from '../types';
 
-const TURSO_URL = 'https://dailysjobs-sachin22.aws-ap-south-1.turso.io';
-const TURSO_TOKEN =
-  'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODM1Nzc5MjMsImlkIjoiMDE5ZjQ1ODQtZjIwMS03NWRhLWE4ZGUtZDYyYzRmZDRiNmIzIiwia2lkIjoiRHJOMEx1alVfNEx1RVBLTzZuYlBXTW1WSWRzUURuVmZEeGJ0WmdPc2xPVSIsInJpZCI6IjIzN2UxZWU3LTZkOTAtNDQyMS05ZDY3LTRhZDIyNGQ0NmM1MCJ9.IG1XheyHquyKJA2RWMXhkZe0n66g6F1ZIKbQt_V07auGtJLCzTHeeSNRefWzQRxpHrmAFLFrA2fW-G5CWndMBg';
+const TURSO_URL = process.env.EXPO_PUBLIC_TURSO_URL!;
+const TURSO_TOKEN = process.env.EXPO_PUBLIC_TURSO_TOKEN!;
 
 interface TursoRequest {
   sql: string;
@@ -151,6 +150,29 @@ export async function getJobById(id: string): Promise<{ data: Job | null; error:
     }]);
     if (rows.length === 0) return { data: null, error: 'Not found' };
     return { data: mapRowToJob(rows[0]), error: null };
+  } catch (error: any) {
+    return { data: null, error: error.message };
+  }
+}
+
+export async function getSiteBannerByPosition(position: string): Promise<{ data: any | null; error: string | null }> {
+  try {
+    const [rows] = await executeTurso([{
+      sql: `SELECT id, position, image_url, link_url, created_at FROM site_banners WHERE position = ?`,
+      args: [position],
+    }]);
+    if (rows.length === 0) return { data: null, error: 'Not found' };
+    const row = rows[0];
+    return { 
+      data: {
+        id: row.id,
+        position: row.position,
+        imageUrl: row.image_url,
+        linkUrl: row.link_url,
+        createdAt: row.created_at,
+      }, 
+      error: null 
+    };
   } catch (error: any) {
     return { data: null, error: error.message };
   }

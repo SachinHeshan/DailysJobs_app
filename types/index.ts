@@ -5,7 +5,7 @@ export interface Job {
   logoUrl?: string;
   location: string;
   category: string;
-  type: 'Full-Time' | 'Part-Time' | 'Internship' | 'Remote';
+  type: 'Full-Time' | 'Part-Time' | 'Internship' | 'Remote' | 'Remote Internship';
   tags: string[];
   salary?: string;
   description: string;

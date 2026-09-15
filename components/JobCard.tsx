@@ -46,6 +46,12 @@ function getTypeColors(type: Job['type'], isDark: boolean) {
         text:   isDark ? '#60a5fa'               : '#1d4ed8',   // blue-400    | blue-700
         border: isDark ? 'rgba(59,130,246,0.20)' : '#dbeafe',   // blue-500/20 | blue-100
       };
+    case 'Remote Internship':
+      return {
+        bg:     isDark ? 'rgba(244,63,94,0.10)'  : '#fff1f2',   // rose-500/10 | rose-50
+        text:   isDark ? '#fb7185'               : '#be123c',   // rose-400    | rose-700
+        border: isDark ? 'rgba(244,63,94,0.20)'  : '#ffe4e6',   // rose-500/20 | rose-100
+      };
     default:
       return {
         bg:     isDark ? '#1e293b' : '#f8fafc',    // slate-800 | slate-50

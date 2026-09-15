@@ -160,21 +160,7 @@ export default function BannerSlider() {
         ))}
       </View>
 
-      {/* Prev / Next Arrows */}
-      <TouchableOpacity
-        style={[styles.arrow, styles.arrowLeft]}
-        onPress={() => goToSlide((currentIndex - 1 + banners.length) % banners.length)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="chevron-back" size={20} color="#fff" />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.arrow, styles.arrowRight]}
-        onPress={() => goToSlide((currentIndex + 1) % banners.length)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="chevron-forward" size={20} color="#fff" />
-      </TouchableOpacity>
+
     </View>
   );
 }

@@ -24,6 +24,7 @@ import { slugify } from '../../lib/slugUtils';
 import { COLORS } from '../../lib/constants';
 import { useTheme } from '../../lib/theme';
 import CompanyLogo from '../../components/CompanyLogo';
+import PositionalBanner from '../../components/PositionalBanner';
 
 function getTypeColors(type: Job['type'], isDark: boolean) {
   switch (type) {
@@ -50,6 +51,12 @@ function getTypeColors(type: Job['type'], isDark: boolean) {
         bg:     isDark ? 'rgba(59,130,246,0.10)' : '#eff6ff',
         text:   isDark ? '#60a5fa'               : '#1d4ed8',
         border: isDark ? 'rgba(59,130,246,0.20)' : '#dbeafe',
+      };
+    case 'Remote Internship':
+      return {
+        bg:     isDark ? 'rgba(244,63,94,0.10)'  : '#fff1f2',
+        text:   isDark ? '#fb7185'               : '#be123c',
+        border: isDark ? 'rgba(244,63,94,0.20)'  : '#ffe4e6',
       };
     default:
       return {
@@ -464,6 +471,9 @@ export default function JobDetailScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Ad Banner */}
+        <PositionalBanner position="below_search" />
 
         <View style={{ height: 32 }} />
       </Animated.ScrollView>

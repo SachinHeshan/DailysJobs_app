@@ -60,6 +60,7 @@ export const JOB_TYPES = [
   "Part-Time",
   "Internship",
   "Remote",
+  "Remote Internship",
 ] as const;
 
 export const DEFAULT_BANNERS = [

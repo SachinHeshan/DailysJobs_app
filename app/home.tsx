@@ -22,6 +22,7 @@ import { LOCATIONS, CATEGORIES, JOB_TYPES } from '../lib/constants';
 import { useTheme } from '../lib/theme';
 import BannerSlider from '../components/BannerSlider';
 import JobCard from '../components/JobCard';
+import PositionalBanner from '../components/PositionalBanner';
 
 const { width } = Dimensions.get('window');
 
@@ -390,30 +391,7 @@ export default function HomeScreen() {
         </View>
 
         {/* ─── Ad Banner ─── */}
-        {/* website: teal gradient, rounded-2xl, shadow */}
-        <TouchableOpacity
-          style={styles.adBanner}
-          onPress={() => Linking.openURL('https://wa.me/94711010575')}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={['#0f766e', '#0d9488', '#0891b2']}   // teal-700 → teal-600 → sky-600
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.adBannerGradient}
-          >
-            <View style={styles.adBannerContent}>
-              <View style={styles.adIconBg}>
-                <Ionicons name="megaphone-outline" size={22} color="#fff" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adBannerTitle}>Advertise With Us</Text>
-                <Text style={styles.adBannerSubtitle}>Reach 50,000+ job seekers · +94 71 101 0575</Text>
-              </View>
-              <Ionicons name="arrow-forward-circle" size={26} color="rgba(255,255,255,0.8)" />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
+        <PositionalBanner position="below_search" style={{ marginHorizontal: 16, marginTop: 16 }} />
 
         {/* ─── Job Listings ─── */}
         <View style={styles.jobsSection}>
@@ -769,31 +747,6 @@ const styles = StyleSheet.create({
   clearBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   // website: text-xs font-bold text-teal-600
   clearBtnText: { fontSize: 12, fontWeight: '700', color: '#0d9488' },
-
-  // ── Ad Banner ──
-  adBanner: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 16,           // rounded-2xl
-    overflow: 'hidden',
-    shadowColor: '#0d9488',
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  adBannerGradient:  { paddingHorizontal: 16, paddingVertical: 14 },
-  adBannerContent:   { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  adIconBg: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  adBannerTitle:    { fontSize: 15, fontWeight: '800', color: '#fff' },
-  adBannerSubtitle: { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
 
   // ── Jobs section ──
   jobsSection: { marginHorizontal: 16, marginTop: 24 },
