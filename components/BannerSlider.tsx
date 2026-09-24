@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../lib/supabase';
+
 import { DEFAULT_BANNERS, COLORS } from '../lib/constants';
 import { useTheme } from '../lib/theme';
 
@@ -28,54 +28,10 @@ interface BannerData {
 
 export default function BannerSlider() {
   const { colors, isDark } = useTheme();
-  // Always seed with the 3 website default banners
   const [banners, setBanners] = useState<BannerData[]>(DEFAULT_BANNERS);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(false); // no loading flash; defaults show instantly
   const flatListRef = useRef<any>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Fetch any extra Supabase banners and prepend them
-  useEffect(() => {
-    fetchBanners();
-  }, []);
-
-  const fetchBanners = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('banners')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const fetched: BannerData[] = (data || [])
-        .map((b: any) => ({
-          id: b.id,
-          title: b.title,
-          subtitle: b.subtitle,
-          imageUrl: b.image_url,
-          linkUrl: b.link_url,
-        }))
-        .filter((b: BannerData) => b.imageUrl && b.imageUrl.trim() !== '');
-
-      if (fetched.length > 0) {
-        // Supabase banners first, then the 3 website defaults appended
-        const combined = [...fetched, ...DEFAULT_BANNERS];
-        // Deduplicate by id
-        const seen = new Set<string>();
-        const unique = combined.filter((b) => {
-          if (seen.has(b.id)) return false;
-          seen.add(b.id);
-          return true;
-        });
-        setBanners(unique);
-      }
-      // If Supabase is empty, DEFAULT_BANNERS already set in useState
-    } catch {
-      // Keep DEFAULT_BANNERS already set
-    }
-  };
 
   useEffect(() => {
     if (banners.length === 0) return;

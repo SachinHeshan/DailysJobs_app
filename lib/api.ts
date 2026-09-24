@@ -1,90 +1,35 @@
 import { Job } from '../types';
 
-const TURSO_URL = process.env.EXPO_PUBLIC_TURSO_URL!;
-const TURSO_TOKEN = process.env.EXPO_PUBLIC_TURSO_TOKEN!;
-
-interface TursoRequest {
-  sql: string;
-  args?: any[];
-}
-
-async function executeTurso(requests: TursoRequest[]): Promise<any[][]> {
-  const response = await fetch(`${TURSO_URL}/v2/pipeline`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${TURSO_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      requests: requests.map((r) => ({
-        type: 'execute',
-        stmt: {
-          sql: r.sql,
-          args: (r.args || []).map((arg) => {
-            if (arg === null || arg === undefined)
-              return { type: 'null', value: null };
-            if (typeof arg === 'number')
-              return { type: 'integer', value: String(arg) };
-            return { type: 'text', value: String(arg) };
-          }),
-        },
-      })),
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Turso API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const results: any[][] = [];
-
-  for (const result of data.results) {
-    if (result.type === 'error') {
-      throw new Error(result.error?.message || 'Unknown Turso error');
-    }
-    const cols = result.response?.result?.cols?.map((c: any) => c.name) || [];
-    const rows = (result.response?.result?.rows || []).map((row: any[]) => {
-      const obj: any = {};
-      cols.forEach((col: string, idx: number) => {
-        const cell = row[idx];
-        obj[col] = cell?.value ?? null;
-      });
-      return obj;
-    });
-    results.push(rows);
-  }
-
-  return results;
-}
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 function mapRowToJob(row: any): Job {
   return {
     id: row.firebase_id || row.id,
     title: row.title,
-    companyName: row.company_name,
-    logoUrl: row.logo_url,
+    companyName: row.company_name ?? row.companyName,
+    logoUrl: row.logo_url ?? row.logoUrl,
     location: row.location,
     category: row.category,
     type: row.type,
     tags: (() => {
       try {
-        return typeof row.tags === 'string' ? JSON.parse(row.tags || '[]') : row.tags || [];
+        const t = row.tags ?? row.tags;
+        return typeof t === 'string' ? JSON.parse(t || '[]') : t || [];
       } catch {
         return [];
       }
     })(),
     salary: row.salary,
     description: row.description,
-    howToApply: row.how_to_apply,
-    postedAt: row.posted_at,
-    expiresAt: row.expires_at,
-    featured: row.featured === '1' || row.featured === 1,
-    approved: row.approved === '1' || row.approved === 1,
-    urgent: row.urgent === '1' || row.urgent === 1,
-    jobPostUrl: row.job_post_url,
-    companyWebsite: row.company_website,
-    jobPostImageUrl: row.job_post_image_url,
+    howToApply: row.how_to_apply ?? row.howToApply,
+    postedAt: row.posted_at ?? row.postedAt,
+    expiresAt: row.expires_at ?? row.expiresAt,
+    featured: row.featured === '1' || row.featured === 1 || row.featured === true,
+    approved: row.approved === '1' || row.approved === 1 || row.approved === true,
+    urgent: row.urgent === '1' || row.urgent === 1 || row.urgent === true,
+    jobPostUrl: row.job_post_url ?? row.jobPostUrl,
+    companyWebsite: row.company_website ?? row.companyWebsite,
+    jobPostImageUrl: row.job_post_image_url ?? row.jobPostImageUrl,
   };
 }
 
@@ -100,42 +45,24 @@ export interface GetJobsParams {
 
 export async function getJobs(params: GetJobsParams): Promise<{ data: Job[]; error: string | null }> {
   try {
-    let sql = `SELECT id, firebase_id, title, company_name, logo_url, location, category, type, tags, salary, description, how_to_apply, posted_at, expires_at, featured, urgent, approved, company_website, job_post_url, job_post_image_url FROM job_vacancies WHERE 1=1`;
-    const args: any[] = [];
+    const urlParams = new URLSearchParams();
+    if (params.approvedOnly !== undefined) urlParams.append('approvedOnly', String(params.approvedOnly));
+    if (params.searchTerm) urlParams.append('search', params.searchTerm);
+    if (params.location) urlParams.append('location', params.location);
+    if (params.category) urlParams.append('category', params.category);
+    if (params.type) urlParams.append('type', params.type);
+    if (params.limit !== undefined) urlParams.append('limit', String(params.limit));
+    if (params.offset !== undefined) urlParams.append('offset', String(params.offset));
 
-    if (params.approvedOnly) {
-      sql += ` AND approved = 1`;
-    }
-    if (params.searchTerm) {
-      sql += ` AND (title LIKE '%' || ? || '%' OR company_name LIKE '%' || ? || '%')`;
-      args.push(params.searchTerm, params.searchTerm);
-    }
-    if (params.location) {
-      sql += ` AND location = ?`;
-      args.push(params.location);
-    }
-    if (params.category) {
-      sql += ` AND category = ?`;
-      args.push(params.category);
-    }
-    if (params.type) {
-      sql += ` AND type = ?`;
-      args.push(params.type);
+    const response = await fetch(`${API_URL}/api/jobs?${urlParams.toString()}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
 
-    sql += ` ORDER BY posted_at DESC`;
+    const json = await response.json();
+    if (json.error) throw new Error(json.error);
 
-    if (params.limit !== undefined) {
-      sql += ` LIMIT ?`;
-      args.push(params.limit);
-    }
-    if (params.offset !== undefined) {
-      sql += ` OFFSET ?`;
-      args.push(params.offset);
-    }
-
-    const [rows] = await executeTurso([{ sql, args }]);
-    return { data: rows.map(mapRowToJob), error: null };
+    return { data: (json.data as any[]).map(mapRowToJob), error: null };
   } catch (error: any) {
     console.error('Error fetching jobs:', error);
     return { data: [], error: error.message };
@@ -144,12 +71,16 @@ export async function getJobs(params: GetJobsParams): Promise<{ data: Job[]; err
 
 export async function getJobById(id: string): Promise<{ data: Job | null; error: string | null }> {
   try {
-    const [rows] = await executeTurso([{
-      sql: `SELECT id, firebase_id, title, company_name, logo_url, location, category, type, tags, salary, description, how_to_apply, posted_at, expires_at, featured, urgent, approved, job_post_url, company_website, job_post_image_url FROM job_vacancies WHERE id = ? OR firebase_id = ?`,
-      args: [id, id],
-    }]);
-    if (rows.length === 0) return { data: null, error: 'Not found' };
-    return { data: mapRowToJob(rows[0]), error: null };
+    const response = await fetch(`${API_URL}/api/jobs/${id}`);
+    if (!response.ok) {
+      if (response.status === 404) return { data: null, error: 'Not found' };
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const json = await response.json();
+    if (json.error) throw new Error(json.error);
+
+    return { data: mapRowToJob(json.data), error: null };
   } catch (error: any) {
     return { data: null, error: error.message };
   }
@@ -157,22 +88,16 @@ export async function getJobById(id: string): Promise<{ data: Job | null; error:
 
 export async function getSiteBannerByPosition(position: string): Promise<{ data: any | null; error: string | null }> {
   try {
-    const [rows] = await executeTurso([{
-      sql: `SELECT id, position, image_url, link_url, created_at FROM site_banners WHERE position = ?`,
-      args: [position],
-    }]);
-    if (rows.length === 0) return { data: null, error: 'Not found' };
-    const row = rows[0];
-    return { 
-      data: {
-        id: row.id,
-        position: row.position,
-        imageUrl: row.image_url,
-        linkUrl: row.link_url,
-        createdAt: row.created_at,
-      }, 
-      error: null 
-    };
+    const response = await fetch(`${API_URL}/api/banners/${position}`);
+    if (!response.ok) {
+      if (response.status === 404) return { data: null, error: 'Not found' };
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const json = await response.json();
+    if (json.error) throw new Error(json.error);
+
+    return { data: json.data, error: null };
   } catch (error: any) {
     return { data: null, error: error.message };
   }
